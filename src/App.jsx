@@ -1,32 +1,22 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { LoanApplicationProvider } from './LoanApplicationContext';
-import LoanCalculator from './pages/LoanCalculator.jsx';
-import LoanApplication from './pages/LoanApplication.jsx';
-import Details from './pages/Details.jsx';
-import Summary from './pages/Summary.jsx';
+import LoanApp from './pages/LoanApp.jsx';
 import Login from './pages/Login.jsx';
-import Otp from './pages/Otp.jsx';
-import Confirm from './pages/Confirm.jsx';
 import Status from './pages/Status.jsx';
-
 
 function App() {
   return (
-    <LoanApplicationProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LoanCalculator />} />
-          <Route path="/check-rate" element={<LoanCalculator />} />
-          <Route path="/loan-application" element={<LoanApplication />}/>
-          <Route path="/details" element={<Details />} />
-          <Route path="/summary" element={<Summary />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/verify" element={<Otp />} />
-          <Route path="/confirm" element={<Confirm />} />
-          <Route path="/status" element={<Status />} />
-        </Routes>
-      </Router>
-    </LoanApplicationProvider>
+    <Router>
+      <Routes>
+        <Route path="/:userId"                    element={<LoanApp />} />
+        <Route path="/:userId/check-rate"         element={<LoanApp />} />
+        <Route path="/:userId/loan-application"   element={<LoanApp />} />
+        <Route path="/:userId/details"            element={<LoanApp />} />
+        <Route path="/:userId/summary"            element={<LoanApp />} />
+        <Route path="/:userId/login"              element={<Login />} />
+        <Route path="/:userId/status"             element={<Status />} />
+        <Route path="*"                           element={<LoanApp />} />
+      </Routes>
+    </Router>
   );
 }
 
