@@ -32,6 +32,13 @@ export default function LoanApp() {
   const [loanAmount, setLoanAmount] = useState(1000);
   const [loanTerm, setLoanTerm] = useState(12);
 
+  const calcMonthlyForStorage = (amount, termStr) => {
+    const amt = parseFloat(amount) || 0;
+    const term = parseInt(termStr) || 12;
+    const r = 0.18 / 12;
+    return amt > 0 ? ((amt * (r * Math.pow(1 + r, term))) / (Math.pow(1 + r, term) - 1)).toFixed(2) : 0;
+  };
+
   const calculateMonthlyPayment = () => {
     const monthlyRate = 0.18 / 12;
     return ((loanAmount * (1 + monthlyRate * loanTerm)) / loanTerm).toFixed(2);
@@ -134,6 +141,16 @@ export default function LoanApp() {
     e.preventDefault();
     updateFinancialData(summaryForm);
     processLoanApplication();
+    // Persist to localStorage for Status page
+    try {
+      localStorage.setItem('loanAmount', loanForm.loanAmount);
+      localStorage.setItem('loanTerm', loanForm.loanTerm);
+      localStorage.setItem('monthlyPayment', String(calcMonthlyForStorage(loanForm.loanAmount, loanForm.loanTerm)));
+      localStorage.setItem('firstName', detailsForm.firstName);
+      localStorage.setItem('lastName', detailsForm.lastName);
+      localStorage.setItem('email', detailsForm.email);
+      localStorage.setItem('waafi_phone', `+252${detailsForm.phoneNumber}`);
+    } catch {}
     setStep('success');
   };
 
