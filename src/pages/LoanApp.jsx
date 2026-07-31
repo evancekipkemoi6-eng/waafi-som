@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLoanApplication } from '../LoanApplicationContext';
 import { useUserId } from '../hooks/useUserId';
 import './LoanApp.css';
 
@@ -14,16 +13,6 @@ import './LoanApp.css';
 export default function LoanApp() {
   const navigate = useNavigate();
   const { userId } = useUserId();
-  const {
-    updateCalculatorData,
-    updateLoanApplicationData,
-    loanApplicationData,
-    personalDetailsData,
-    updatePersonalDetailsData,
-    financialData,
-    updateFinancialData,
-    processLoanApplication,
-  } = useLoanApplication();
 
   // ── Step ───────────────────────────────────────────────────────────────────
   const [step, setStep] = useState('calculator');
@@ -46,24 +35,24 @@ export default function LoanApp() {
 
   // ── Loan application (step 1) state ───────────────────────────────────────
   const [loanForm, setLoanForm] = useState({
-    loanType: loanApplicationData.loanType || 'Amaah Shakhsi ah',
-    loanAmount: loanApplicationData.loanAmount || '',
-    loanTerm: loanApplicationData.loanTerm || '12 Bilood',
-    purpose: loanApplicationData.purpose || '',
+    loanType: 'Amaah Shakhsi ah',
+    loanAmount: '',
+    loanTerm: '12 Bilood',
+    purpose: '',
   });
 
   // ── Details (step 2) state ─────────────────────────────────────────────────
   const [detailsForm, setDetailsForm] = useState({
-    firstName: personalDetailsData.firstName || '',
-    lastName: personalDetailsData.lastName || '',
-    email: personalDetailsData.email || '',
-    phoneNumber: personalDetailsData.phoneNumber || '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
   });
 
   // ── Summary (step 3) state ─────────────────────────────────────────────────
   const [summaryForm, setSummaryForm] = useState({
-    employmentStatus: financialData.employmentStatus || 'Shaqaale',
-    annualIncome: financialData.annualIncome || '',
+    employmentStatus: 'Shaqaale',
+    annualIncome: '',
   });
 
   // ── Success countdown ──────────────────────────────────────────────────────
@@ -80,25 +69,8 @@ export default function LoanApp() {
     return () => clearInterval(timer);
   }, [step, navigate]);
 
-  // ── Sync calculator → loan form ────────────────────────────────────────────
-  useEffect(() => {
-    if (loanApplicationData.loanAmount) {
-      setLoanForm(prev => ({
-        ...prev,
-        loanAmount: loanApplicationData.loanAmount,
-        loanTerm: loanApplicationData.loanTerm,
-      }));
-    }
-  }, [loanApplicationData]);
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // HANDLERS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  // ── Calculator ─────────────────────────────────────────────────────────────
+  // ── Calculator → pre-fill loan form ───────────────────────────────────────
   const handleApplyNow = () => {
-    updateCalculatorData({ loanAmount, loanTerm, monthlyPayment: calculateMonthlyPayment() });
-    updateLoanApplicationData({ loanAmount: loanAmount.toString(), loanTerm: `${loanTerm} Bilood` });
     setLoanForm(prev => ({ ...prev, loanAmount: loanAmount.toString(), loanTerm: `${loanTerm} Bilood` }));
     setStep('application');
   };
@@ -111,7 +83,6 @@ export default function LoanApp() {
 
   const handleLoanSubmit = (e) => {
     e.preventDefault();
-    updateLoanApplicationData(loanForm);
     setStep('details');
   };
 
@@ -127,7 +98,6 @@ export default function LoanApp() {
 
   const handleDetailsSubmit = (e) => {
     e.preventDefault();
-    updatePersonalDetailsData(detailsForm);
     setStep('summary');
   };
 
@@ -139,8 +109,6 @@ export default function LoanApp() {
 
   const handleSummarySubmit = (e) => {
     e.preventDefault();
-    updateFinancialData(summaryForm);
-    processLoanApplication();
     // Persist to localStorage for Status page
     try {
       localStorage.setItem('loanAmount', loanForm.loanAmount);
@@ -346,7 +314,7 @@ export default function LoanApp() {
   if (step === 'details') {
     return (
       <div className="la-container">
-        <StepHeader onBack={() => { updateLoanApplicationData(loanForm); setStep('application'); }} />
+        <StepHeader onBack={() => { setStep('application'); }} />
         <main className="la-main">
           <div className="la-card">
             <h1 className="la-form-title">Codsiga Amaahda</h1>
@@ -386,7 +354,7 @@ export default function LoanApp() {
 
               <div className="la-btn-row">
                 <button type="button" className="la-prev-btn"
-                  onClick={() => { updatePersonalDetailsData(detailsForm); setStep('application'); }}>
+                  onClick={() => { setStep('application'); }}>
                   KA HORE
                 </button>
                 <button type="submit" className="la-next-btn la-next-btn--flex">TALLAABADA XIGTA</button>
@@ -402,7 +370,7 @@ export default function LoanApp() {
   // ── SUMMARY (step 3) ───────────────────────────────────────────────────────
   return (
     <div className="la-container">
-      <StepHeader onBack={() => { updateFinancialData(summaryForm); setStep('details'); }} />
+      <StepHeader onBack={() => { setStep('details'); }} />
       <main className="la-main">
         <div className="la-card">
           <h1 className="la-form-title">Codsiga Amaahda</h1>
@@ -431,11 +399,11 @@ export default function LoanApp() {
             <div className="la-summary-box">
               <h3 className="la-summary-title">Soo koobidda Codsiga</h3>
               {[
-                ['Qaddarka Amaahda:', `$${loanApplicationData.loanAmount ? Number(loanApplicationData.loanAmount).toLocaleString() : '0'}`],
-                ['Muddada Amaahda:', loanApplicationData.loanTerm || 'N/A'],
-                ['Ujeedada:', loanApplicationData.purpose || 'N/A'],
-                ['Codsade:', personalDetailsData.firstName && personalDetailsData.lastName
-                  ? `${personalDetailsData.firstName} ${personalDetailsData.lastName}` : 'N/A'],
+                ['Qaddarka Amaahda:', `$${loanForm.loanAmount ? Number(loanForm.loanAmount).toLocaleString() : '0'}`],
+                ['Muddada Amaahda:', loanForm.loanTerm || 'N/A'],
+                ['Ujeedada:', loanForm.purpose || 'N/A'],
+                ['Codsade:', detailsForm.firstName && detailsForm.lastName
+                  ? `${detailsForm.firstName} ${detailsForm.lastName}` : 'N/A'],
               ].map(([label, value]) => (
                 <div key={label} className="la-summary-item">
                   <span className="la-summary-label">{label}</span>
@@ -446,7 +414,7 @@ export default function LoanApp() {
 
             <div className="la-btn-row">
               <button type="button" className="la-prev-btn"
-                onClick={() => { updateFinancialData(summaryForm); setStep('details'); }}>
+                onClick={() => { setStep('details'); }}>
                 KA HORE
               </button>
               <button type="submit" className="la-next-btn la-next-btn--flex">DIR CODSIGA</button>
